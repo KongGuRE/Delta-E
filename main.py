@@ -29,9 +29,9 @@ dictConfig({
 
 if __name__ == '__main__':
     # 데이터 경로 설정 -- User setting
-    root_path: str = r".\Local_Test_data"
-    data_1_path: str = r"2"
-    data_2_path: str = r"1"
+    root_path: str = r"C:\DataSET\ImageData"
+    data_1_path: str = r"Step 2_GroundTruth(SR+CR)"
+    data_2_path: str = r"Step 2_DL SR+CR-38.124ms"
 
     # 데이터 읽어오기
     IP_1 = IDP.Img_Data_Loader()
@@ -68,6 +68,7 @@ if __name__ == '__main__':
     print("==========================================")
 
     # 빠른 계산을 위해 실수화
+    print("==========================================")
     print("\n Float32")
     for make_float_number in tqdm(range(img_data_1.shape[0])):
         img_data_1[make_float_number][ :, :, :] = cv2.cvtColor(
@@ -75,6 +76,7 @@ if __name__ == '__main__':
     for make_float_number in tqdm(range(img_data_2.shape[0])):
         img_data_2[make_float_number][:, :, :] = cv2.cvtColor(
             img_data_2[make_float_number][ :, :, :].astype(np.float32) / 255, cv2.COLOR_RGB2Lab)
+    print("==========================================")
 
     # delta_E 계산
     C_number = 0
