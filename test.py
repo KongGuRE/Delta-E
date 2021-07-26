@@ -9,7 +9,6 @@ from skimage.metrics import structural_similarity as ssim
 import math
 from PIL import Image
 
-
 dictConfig({
     'version': 1,
     'formatters': {
@@ -21,7 +20,7 @@ dictConfig({
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': 'Step_1_DL_SR-12.125ms.log',
+            'filename': 'debug.log',
             'formatter': 'default',
         },
     },
@@ -31,75 +30,27 @@ dictConfig({
     }
 })
 
-
 def mse(imageA, imageB):
     # the 'Mean Squared Error' between the two images is the
     # sum of the squared difference between the two images;
     # NOTE: the two images must have the same dimension
     err = np.sum((imageA.astype("float") - imageB.astype("float")) ** 2)
     err /= float(imageA.shape[0] * imageA.shape[1])
-    err = err / 3 #이미지가 3채널 임으로 /3을 넣어 주어야함
 
     # return the MSE, the lower the error, the more "similar"
     # the two images are
     return err
-
 
 def d_psnr(_mse):
     if _mse == 0:
         return float('inf')
     return 20 * math.log10(255.0 / math.sqrt(_mse))
 
-
-def d_ssim(img1, img2):
-    C1 = (0.01 * 255)**2
-    C2 = (0.03 * 255)**2
-
-    img1 = img1.astype(np.float64)
-    img2 = img2.astype(np.float64)
-    kernel = cv2.getGaussianKernel(11, 1.5)
-    window = np.outer(kernel, kernel.transpose())
-
-    mu1 = cv2.filter2D(img1, -1, window)[5:-5, 5:-5]  # valid
-    mu2 = cv2.filter2D(img2, -1, window)[5:-5, 5:-5]
-    mu1_sq = mu1**2
-    mu2_sq = mu2**2
-    mu1_mu2 = mu1 * mu2
-    sigma1_sq = cv2.filter2D(img1**2, -1, window)[5:-5, 5:-5] - mu1_sq
-    sigma2_sq = cv2.filter2D(img2**2, -1, window)[5:-5, 5:-5] - mu2_sq
-    sigma12 = cv2.filter2D(img1 * img2, -1, window)[5:-5, 5:-5] - mu1_mu2
-
-    ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / ((mu1_sq + mu2_sq + C1) *
-                                                            (sigma1_sq + sigma2_sq + C2))
-    return ssim_map.mean()
-
-
-def calculate_ssim(img1, img2):
-    '''calculate SSIM
-    the same outputs as MATLAB's
-    img1, img2: [0, 255]
-    '''
-    if not img1.shape == img2.shape:
-        raise ValueError('Input images must have the same dimensions.')
-    if img1.ndim == 2:
-        return ssim(img1, img2)
-    elif img1.ndim == 3:
-        if img1.shape[2] == 3:
-            ssims = []
-            for i in range(3):
-                ssims.append(ssim(img1, img2))
-            return np.array(ssims).mean()
-        elif img1.shape[2] == 1:
-            return ssim(np.squeeze(img1), np.squeeze(img2))
-    else:
-        raise ValueError('Wrong input image dimensions.')
-
-
 if __name__ == '__main__':
     # 데이터 경로 설정 -- User setting
     root_path: str = r"C:\DataSET\ImageData\High-resolution pattern checker"
-    data_1_path: str = r"Step 1_GroundTruth(SR)"
-    data_2_path: str = r"Step 1_DL SR-12.125ms"
+    data_1_path: str = r"Step 2_GroundTruth(SR+CR)"
+    data_2_path: str = r"Step 2_DL SR+CR-38.124ms"
 
     # 데이터 읽어오기
     IP_1 = IDP.Img_Data_Loader()
@@ -135,6 +86,19 @@ if __name__ == '__main__':
                         "problems with the results.")
     print("==========================================")
 
+    # 계산 위해 실수화
+    print("==========================================")
+    print("\n Float32")
+    img_data_1_org = img_data_1
+    img_data_2_org = img_data_2
+    for make_float_number in tqdm(range(img_data_1.shape[0])):
+        img_data_1[make_float_number][:, :, :] = cv2.cvtColor(
+            img_data_1[make_float_number][:, :, :].astype(np.float32) / 255, cv2.COLOR_RGB2Lab)
+    for make_float_number in tqdm(range(img_data_2.shape[0])):
+        img_data_2[make_float_number][:, :, :] = cv2.cvtColor(
+            img_data_2[make_float_number][:, :, :].astype(np.float32) / 255, cv2.COLOR_RGB2Lab)
+    print("==========================================")
+
     # delta_E 계산
     C_number = 0
     print("\ndelta E calculating")
@@ -144,6 +108,7 @@ if __name__ == '__main__':
         except:
             continue
         if img_file_name_list_B[B_index] == file_name:
+
             img_mse = mse(img_data_1[calculate_delta_e_number][:, :, :], img_data_2[B_index][:, :, :])
             img_psnr = d_psnr(img_mse)
             img_ssim = ssim(img_data_1[calculate_delta_e_number][:, :, :], img_data_2[B_index][:, :, :],
@@ -153,14 +118,14 @@ if __name__ == '__main__':
 
             logging.debug(
                 "A: " + file_name + ", B: " + img_file_name_list_B[B_index] +
-                " | MSE | " + str(img_mse) +
-                " | PSNR | " + str(img_psnr) +
-                " | SSMI | " + str(img_ssim) +
-                " | Delta_E | " + str(np.mean(delta_E)))
+                "| MSE | " + str(img_mse) +
+                "| PSNR | " + str(img_psnr) +
+                "| SSMI | " + str(img_ssim) +
+                "| delta_E | " + str(np.mean(delta_E)))
 
         C_number += 1
 
-    # logging.debug("Data number: " + str(
-    #     (len(img_file_name_list_A) + len(img_file_name_list_B)) / 2) + ", Calculated data number: " + str(C_number))
+    logging.debug("Data number: " + str(
+        (len(img_file_name_list_A) + len(img_file_name_list_B)) / 2) + ", Calculated data number: " + str(C_number))
     print("Data number: " + str(
         (len(img_file_name_list_A) + len(img_file_name_list_B)) / 2) + ", Calculated data number: " + str(C_number))
