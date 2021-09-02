@@ -7,6 +7,7 @@ import logging
 from tqdm import tqdm
 from skimage.metrics import structural_similarity as ssim
 import math
+import datetime
 from PIL import Image
 
 
@@ -21,7 +22,7 @@ dictConfig({
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': 'Step_1_DL_SR-12.125ms.log',
+            'filename': 'Calculat.log',
             'formatter': 'default',
         },
     },
@@ -96,10 +97,12 @@ def calculate_ssim(img1, img2):
 
 
 if __name__ == '__main__':
+
+    start = datetime.datetime.now()
     # 데이터 경로 설정 -- User setting
-    root_path: str = r"C:\DataSET\ImageData\High-resolution pattern checker"
-    data_1_path: str = r"Step 1_GroundTruth(SR)"
-    data_2_path: str = r"Step 1_DL SR-12.125ms"
+    root_path: str = r"C:\DataSET\High-resolution pattern checker\210730"
+    data_1_path: str = r"210730_CR GroundTruth"
+    data_2_path: str = r"210730_CR Result_175000"
 
     # 데이터 읽어오기
     IP_1 = IDP.Img_Data_Loader()
