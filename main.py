@@ -1,15 +1,15 @@
+import datetime
+import logging
+import math
+from logging.config import dictConfig
+
+import colour
 import cv2
 import numpy as np
-import colour
-import Img_Data_Process as IDP
-from logging.config import dictConfig
-import logging
-from tqdm import tqdm
 from skimage.metrics import structural_similarity as ssim
-import math
-import datetime
-from PIL import Image
+from tqdm import tqdm
 
+import Img_Data_Process as IDP
 
 dictConfig({
     'version': 1,

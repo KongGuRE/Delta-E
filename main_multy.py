@@ -1,15 +1,14 @@
+import glob
+import logging
+import math
+from logging.config import dictConfig
+from pathlib import Path
+
+import colour
 import cv2
 import numpy as np
-import colour
-from logging.config import dictConfig
-import logging
-from tqdm import tqdm
 from skimage.metrics import structural_similarity as ssim
-import math
-import glob
-import os
-from pathlib import Path
-from PIL import Image
+from tqdm import tqdm
 
 dictConfig({
     'version': 1,
